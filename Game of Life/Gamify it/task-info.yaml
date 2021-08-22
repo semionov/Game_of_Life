@@ -1,0 +1,334 @@
+type: edu
+custom_name: stage5
+files:
+- name: src/life/Main.java
+  visible: true
+  text: |
+    package life;
+
+    import java.io.IOException;
+    import java.util.Scanner;
+
+    public class Main {
+
+        public static void main(String[] args) {
+            Scanner scanner = new Scanner(System.in);
+
+            int size = scanner.nextInt();
+            //long seed = (long) (Math.random() * (100 - 10 + 1) + 10);
+            int numberOfGenerations = (int) (Math.random() * (20 - 10 + 1) + 10);
+
+            GenAlgorithm genAlgorithm = new GenAlgorithm();
+            Universe universe = new Universe(genAlgorithm.createGen(size));
+            Universe[] generations = new Universe[numberOfGenerations + 1];
+
+            //if (numberOfGenerations > 0) {
+                generations[0] = universe;
+
+                for (int i = 1; i < numberOfGenerations + 1; i++) {
+                    generations[i] = new Universe(GenAlgorithm.newGen(generations[i - 1].getUniverse()));
+                }
+            //printOutUniverse(generations[numberOfGenerations]);
+            //} else {
+             //   printOutUniverse(universe);
+            //}
+
+            for (int i = 0; i < generations.length; i++) {
+                clearConsole();
+                System.out.println("Generation #" + i);
+                System.out.println("Alive: " + generations[i].aliveCount());
+                printOutUniverse(generations[i]);
+                try {
+                    Thread.sleep(500);
+                }
+                catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            scanner.close();
+            System.exit(0);
+        }
+
+        public static void printOutUniverse(Universe universe) {
+            for (char[] i: universe.getUniverse()) {
+                for (char j: i) {
+                    System.out.print(j);
+                }
+                System.out.println("");
+            }
+        }
+
+        public static void clearConsole() {
+
+            try {
+                if (System.getProperty("os.name").contains("Windows"))
+                    new ProcessBuilder("cmd","/c","cls").inheritIO().start().waitFor();
+                else
+                    Runtime.getRuntime().exec("clear");
+            }
+            catch (IOException | InterruptedException e) {}
+        }
+    }
+  learner_created: false
+- name: src/life/Universe.java
+  visible: true
+  text: |
+    package life;
+
+    public class Universe {
+        private char[][] universe;
+
+        public Universe(char[][] universe) {
+
+            this.universe = universe;
+        }
+
+        public char[][] getUniverse() {
+
+            return universe;
+        }
+
+        public void setUniverse(char[][] universe) {
+
+            this.universe = universe;
+        }
+
+        public int aliveCount() {
+            int counter = 0;
+            for (char[] i: universe) {
+                for (char j: i) {
+                    if (j == 'O') {
+                        counter++;
+                    }
+                }
+            }
+            return counter;
+        }
+    }
+  learner_created: false
+- name: src/life/GenAlgorithm.java
+  visible: true
+  text: |
+    package life;
+
+    import java.util.Random;
+
+    public class GenAlgorithm {
+        private static Random random;
+        //long seed;
+
+        public GenAlgorithm() {
+            //this.seed = seed;
+            random = new Random();
+        }
+
+        public static char[][] newGen(char[][] oldGen) {
+            char[][] newGen = new char[oldGen.length][oldGen[0].length];
+            int oCounter;
+
+            for (int i = 0; i < oldGen.length; i++) {
+                for (int j = 0; j < oldGen[i].length; j++) {
+                    oCounter = 0;
+                    if (oldGen[((i - 1) + oldGen.length) % oldGen.length][j] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[((i - 1) + oldGen.length) % oldGen.length]
+                        [(j + 1) % oldGen[i].length] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[(i + 1) % oldGen.length][j] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[i][(j + 1) % oldGen[i].length] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[i][((j - 1 + oldGen[i].length) % oldGen[i].length)] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[((i - 1) + oldGen.length) % oldGen.length]
+                        [((j - 1 + oldGen[i].length) % oldGen[i].length)] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[(i + 1) % oldGen.length]
+                        [(j + 1) % oldGen[i].length] == 'O') {
+                        oCounter++;
+                    }
+                    if (oldGen[(i + 1) % oldGen.length]
+                        [((j - 1 + oldGen[i].length) % oldGen[i].length)] == 'O') {
+                        oCounter++;
+                    }
+
+                    if (oldGen[i][j] == 'O') {
+                        if (oCounter < 2 || oCounter > 3) {
+                            newGen[i][j] = ' ';
+                        } else {
+                            newGen[i][j] = 'O';
+                        }
+                    } else if (oldGen[i][j] == ' ') {
+                        if (oCounter == 3) {
+                            newGen[i][j] = 'O';
+                        } else {
+                            newGen[i][j] = ' ';
+
+                        }
+                    }
+                }
+            }
+            return newGen;
+        }
+
+        public char[][] createGen(int size) {
+            char[][] newBornGen = new char[size][size];
+
+            for (int i = 0; i < newBornGen.length; i++) {
+                for (int j = 0; j < newBornGen[i].length; j++) {
+                    if (random.nextBoolean()) {
+                        newBornGen[i][j] = 'O';
+                    } else {
+                        newBornGen[i][j] = ' ';
+                    }
+                }
+            }
+            return newBornGen;
+        }
+    }
+  learner_created: false
+- name: test/GameOfLifeTest.java
+  visible: false
+  text: |
+    import life.GameOfLife;
+    import org.assertj.swing.fixture.JButtonFixture;
+    import org.assertj.swing.fixture.JLabelFixture;
+    import org.assertj.swing.fixture.JToggleButtonFixture;
+    import org.hyperskill.hstest.common.Utils;
+    import org.hyperskill.hstest.dynamic.DynamicTest;
+    import org.hyperskill.hstest.exception.outcomes.WrongAnswer;
+    import org.hyperskill.hstest.stage.SwingTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import org.hyperskill.hstest.testing.swing.SwingComponent;
+
+    import java.util.regex.Matcher;
+    import java.util.regex.Pattern;
+
+    import static org.hyperskill.hstest.testcase.CheckResult.correct;
+    import static org.hyperskill.hstest.testcase.CheckResult.wrong;
+
+    public class GameOfLifeTest extends SwingTest {
+
+        public GameOfLifeTest() {
+            super(new GameOfLife());
+        }
+
+        @SwingComponent(name = "GenerationLabel")
+        JLabelFixture generationLabel;
+
+        @SwingComponent(name = "AliveLabel")
+        JLabelFixture aliveLabel;
+
+        @SwingComponent(name = "PlayToggleButton")
+        JToggleButtonFixture playButton;
+
+        @SwingComponent(name = "ResetButton")
+        JButtonFixture resetButton;
+
+        @DynamicTest(order = 1)
+        CheckResult testWindow() {
+            requireVisible(window);
+            return correct();
+        }
+
+        @DynamicTest(order = 2)
+        CheckResult testGenerationLabel() {
+            requireEnabled(generationLabel);
+            requireVisible(generationLabel);
+            return correct();
+        }
+
+        @DynamicTest(order = 3)
+        CheckResult testAliveLabel() {
+            requireEnabled(aliveLabel);
+            requireVisible(aliveLabel);
+            return correct();
+        }
+
+        @DynamicTest(order = 4)
+        CheckResult testForIntegerInLabels() {
+
+            Pattern pattern = Pattern.compile("\\d+");
+            Matcher matcher = pattern.matcher(generationLabel.text());
+
+            if (!matcher.find()) {
+                return wrong("The 'GenerationLabel' doesn't contain an integer number!");
+            }
+
+            matcher = pattern.matcher(aliveLabel.text());
+
+            if (!matcher.find()) {
+                return wrong("The 'AliveLabel' doesn't contain an integer number!");
+            }
+
+            return correct();
+        }
+
+        @DynamicTest(order = 5)
+        CheckResult testPlayButton() {
+            requireEnabled(playButton);
+            requireVisible(playButton);
+            playButton.click();
+            playButton.click();
+            return correct();
+        }
+
+        @DynamicTest(order = 6)
+        CheckResult testResetButton() {
+            requireEnabled(resetButton);
+            requireVisible(resetButton);
+            resetButton.click();
+            return correct();
+        }
+
+        @DynamicTest(order = 7)
+        CheckResult testButtonsActions() {
+
+            playButton.uncheck();
+            resetButton.click();
+
+            int firstGenerationNumber = getNumberFromLabel(generationLabel);
+            Utils.sleep(200);
+            int secondGenerationNumber = getNumberFromLabel(generationLabel);
+
+            if (firstGenerationNumber != secondGenerationNumber) {
+                return wrong("When PlayToggleButton is not toggled the program shouldn't generate new generations! The number in GenerationLabel shouldn't change!");
+            }
+
+            resetButton.click();
+            firstGenerationNumber = getNumberFromLabel(generationLabel);
+            playButton.check();
+            Utils.sleep(200);
+            secondGenerationNumber = getNumberFromLabel(generationLabel);
+
+            if (firstGenerationNumber == secondGenerationNumber) {
+                return wrong("When PlayToggleButton is toggled the program should generate new generations! The number in GenerationLabel should change!\n" +
+                        "Also make sure your program doesn't sleep more than 150 ms after each generation!");
+            }
+
+            return correct();
+        }
+
+        private static int getNumberFromLabel(JLabelFixture labelFixture) {
+            Pattern pattern = Pattern.compile("\\d+");
+            Matcher matcher = pattern.matcher(labelFixture.text());
+
+            System.out.println(labelFixture.text());
+
+            if (!matcher.find()) {
+                throw new WrongAnswer("Can't find a number in the '" + labelFixture.text() + "'!");
+            }
+
+            return Integer.parseInt(matcher.group());
+        }
+    }
+  learner_created: false
+feedback_link: https://hyperskill.org/projects/54/stages/299/implement#comment
+status: Unchecked
+record: -1
